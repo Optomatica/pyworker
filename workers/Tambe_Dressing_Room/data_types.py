@@ -2,34 +2,28 @@ import dataclasses
 import random
 import inspect
 from typing import Dict, Any
-
-from transformers import AutoTokenizer
-import nltk
-
 from lib.data_types import ApiPayload, JsonDataException
 
-nltk.download("words")
-WORD_LIST = nltk.corpus.words.words()
 
-# used to count to count tokens and workload for LLM
-tokenizer = AutoTokenizer.from_pretrained("openai-community/openai-gpt")
 
 
 @dataclasses.dataclass
 class InputData(ApiPayload):
-    prompt: str
-    max_response_tokens: int
+    person_img: str
+    cloth_img: str
+    category: str
 
     @classmethod
     def for_test(cls) -> "InputData":
         prompt = " ".join(random.choices(WORD_LIST, k=int(250)))
-        return cls(prompt=prompt, max_response_tokens=300)
+        return cls(person_img=person_img, cloth_img=cloth_img, category=category
 
     def generate_payload_json(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)
 
     def count_workload(self) -> int:
-        return len(tokenizer.tokenize(self.prompt))
+        return 1
+        # return len(tokenizer.tokenize(self.prompt))
 
     @classmethod
     def from_json_msg(cls, json_msg: Dict[str, Any]) -> "InputData":

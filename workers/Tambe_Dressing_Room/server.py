@@ -23,7 +23,7 @@ from lib.server import start_server
 from .data_types import InputData
 
 # the url and port of model API
-MODEL_SERVER_URL = "http://0.0.0.0:5001"
+MODEL_SERVER_URL = "http://0.0.0.0:3000"
 
 
 # This is the log line that is emitted once the server has started
@@ -43,12 +43,12 @@ log = logging.getLogger(__file__)
 
 # This class is the implementer for the '/generate' endpoint of model API
 @dataclasses.dataclass
-class GenerateHandler(EndpointHandler[InputData]):
+class VirtualTryOn(EndpointHandler[InputData]):
 
     @property
     def endpoint(self) -> str:
         # the API endpoint
-        return "/generate"
+        return "/tambeVirtualTryOn"
 
     @classmethod
     def payload_cls(cls) -> Type[InputData]:
@@ -85,44 +85,6 @@ class GenerateHandler(EndpointHandler[InputData]):
                 return web.Response(status=code)
 
 
-# This is the same as GenerateHandler, except that it calls a streaming endpoint of the model API and streams the
-# response, which itself is streaming, back to the client.
-# it is nearly identical to handler as above, but it calls a different model API endpoint and it streams the
-# streaming response from model API to client
-class GenerateStreamHandler(EndpointHandler[InputData]):
-    @property
-    def endpoint(self) -> str:
-        return "/generate_stream"
-
-    @classmethod
-    def payload_cls(cls) -> Type[InputData]:
-        return InputData
-
-    def generate_payload_json(self, payload: InputData) -> Dict[str, Any]:
-        return dataclasses.asdict(payload)
-
-    def make_benchmark_payload(self) -> InputData:
-        return InputData.for_test()
-
-    async def generate_client_response(
-        self, client_request: web.Request, model_response: ClientResponse
-    ) -> Union[web.Response, web.StreamResponse]:
-        match model_response.status:
-            case 200:
-                log.debug("Streaming response...")
-                res = web.StreamResponse()
-                res.content_type = "text/event-stream"
-                await res.prepare(client_request)
-                async for chunk in model_response.content:
-                    await res.write(chunk)
-                await res.write_eof()
-                log.debug("Done streaming response")
-                return res
-            case code:
-                log.debug("SENDING RESPONSE: ERROR: unknown code")
-                return web.Response(status=code)
-
-
 # This is the backend instance of pyworker. Only one must be made which uses EndpointHandlers to process
 # incoming requests
 backend = Backend(
@@ -131,7 +93,7 @@ backend = Backend(
     allow_parallel_requests=True,
     # give the backend a handler instance that is used for benchmarking
     # number of benchmark run and number of words for a random benchmark run are given
-    benchmark_handler=GenerateHandler(benchmark_runs=3, benchmark_words=256),
+    benchmark_handler=VirtualTryOn(benchmark_runs=3, benchmark_words=256),
     # defines how to handle specific log messages. See docstring of LogAction for details
     log_actions=[
         (LogAction.ModelLoaded, MODEL_SERVER_START_LOG_MSG),
@@ -156,8 +118,7 @@ async def handle_healthcheck(_: web.Request):
 
 
 routes = [
-    web.post("/generate", backend.create_handler(GenerateHandler())),
-    web.post("/generate_stream", backend.create_handler(GenerateStreamHandler())),
+    web.post("/tambeVirtualTryOn", backend.create_handler(VirtualTryOn())),
     web.get("/ping", handle_ping),
     web.get("/healthcheck", handle_healthcheck),
 ]
