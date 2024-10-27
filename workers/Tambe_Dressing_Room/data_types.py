@@ -15,8 +15,10 @@ class InputData(ApiPayload):
 
     @classmethod
     def for_test(cls) -> "InputData":
-        prompt = " ".join(random.choices(WORD_LIST, k=int(250)))
-        return cls(person_img=person_img, cloth_img=cloth_img, category=category
+        person_img = "https://firebasestorage.googleapis.com/v0/b/stylesphere-e8440.appspot.com/o/PersonImage%20(1).jpg?alt=media&token=7fa1242b-6c2d-4ef2-b4ba-84ecaa0f7aa7"
+        cloth_img = "https://firebasestorage.googleapis.com/v0/b/stylesphere-e8440.appspot.com/o/clth_test.jpg?alt=media&token=e2478b35-7a68-42bd-b926-0b2eb76fa841"
+        category = "upper_body"
+        return cls(person_img=person_img, cloth_img=cloth_img, category=category)
 
     def generate_payload_json(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)
