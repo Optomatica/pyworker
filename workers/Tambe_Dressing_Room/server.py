@@ -23,7 +23,7 @@ from lib.server import start_server
 from .data_types import InputData
 
 # the url and port of model API
-MODEL_SERVER_URL = "http://0.0.0.0:3000"
+MODEL_SERVER_URL = "http://0.0.0.0:5001"
 
 
 # This is the log line that is emitted once the server has started
